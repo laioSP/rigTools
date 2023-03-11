@@ -72,11 +72,13 @@ def nurbArrow(name, size):
     arrow_curve = pm.curve(n=name, p=points, d=1, k=[0, 1, 2, 3, 4, 5, 6, 7])
     arrow_curve.setAttr('s',(size,size,size))
     pm.makeIdentity(arrow_curve, apply=True, t=1, r=1, s=1, n=0, pn=1)
-    return(arrow_curve)
+    return arrow_curve
+
+def nurbCircle(name, radius):
+    ring = pm.circle(n=name, r=radius)[0]
+    return ring
 
 
-
-
-shapes = { 'cube': nurbCube, 'square':nurbSquare, 'sphere':nurbSphere, 'arrow':nurbArrow }
+shapes = { 'cube': nurbCube, 'square':nurbSquare, 'sphere':nurbSphere, 'arrow':nurbArrow , 'circle': nurbCircle}
 
 
