@@ -1,5 +1,5 @@
 import pymel.core as pm
-import ctrl
+import controls
 import basicTools as bt
 import ensemble
 
@@ -23,33 +23,35 @@ def motionPath(drivenList, Curve, type):
 
     return motionPathList
 
-def makeCurve(name, type, pointPositions):
+def makeCurve(name, type, pointPositions, degreeAmount = 3):
+
     def ropeCurve():
 
-        Curve = pm.curve(degree=3, point=pointPositions, n='{}_driven_CRV'.format(name))
-        grp = JntGrp.makeHierarchy(Curve, 'N')
-        return grp
+        Curve = pm.curve(degree=degreeAmount, point=pointPositions, n='{}_driven_CRV'.format(name))
+        return Curve
 
     def simpleCircle():
-        Curve = pm.circle(degree=3, s=pointPositions, n='{}_driven_CRV'.format(name), r=5)[0]
-        grp = JntGrp.makeHierarchy(Curve, 'N')
-        return grp
+        Curve = pm.circle(degree=degreeAmount, s=len(pointPositions), n='{}_driven_CRV'.format(name), r=5)[0]
+        return Curve
 
     def circleCurve():
-        Curve = pm.circle(degree=3, s=len(pointPositions), n='{}_driven_CRV'.format(name), r=5)[0]
-
+        Curve = pm.circle(degree=degreeAmount, s=len(pointPositions), n='{}_driven_CRV'.format(name), r=5)[0]
         for cv, pos in zip(Curve.cv, pointPositions):
             cv.setPosition(pos)
 
-        grp = JntGrp.makeHierarchy(Curve, 'N')
-        return grp
+        return Curve
 
     curveChoice = {
         'rope': ropeCurve,
         'circle': circleCurve,
         'simpleCircle': simpleCircle}
 
-    return curveChoice[type]()
+    Curve = curveChoice[type]()
+
+    grp = JntGrp.makeHierarchy(Curve, 'N')
+    Curve.setAttr('template', True)
+
+    return grp
 
 def makeJoints(name, amount, type, radius):
     jointList = []
@@ -61,7 +63,7 @@ def makeJoints(name, amount, type, radius):
 
     return jointList
 
-def driverJoints(name, amount, Curve, type, ctrlsPositions=[]):
+def driverJoints(side, name, amount, Curve, type, ctrlsPositions=[]):
     JointList = makeJoints(name, amount, 'driver', 1.5)
     motionNodes = motionPath(JointList, Curve, type)
     groupList = []
@@ -72,24 +74,13 @@ def driverJoints(name, amount, Curve, type, ctrlsPositions=[]):
     else:
         positions = list(map(lambda jnt: pm.xform(jnt, q=True, worldSpace=True, translation=True), JointList))
 
+    #ctrlList = ctrl(side, name, shape, name, 10, 3, JointList, positions)
+
     pm.delete(motionNodes)
-
-    counter = 1
-    for jnt, pos in zip(JointList, positions):
-        groupList.append(JntGrp.makeHierarchy(jnt, 'N')[-1])
-        jnt.setAttr('t', pos)
-
-        ctrls = ctrl.make('N', 'cube', name, 1, 3, counter)
-        ctrl.translate(ctrls, [pos])
-
-        pm.parentConstraint(ctrls['ctrl'], jnt)
-        pm.scaleConstraint(ctrls['ctrl'], jnt)
-
-        counter +=1
 
     pm.skinCluster(JointList, Curve, toSelectedBones=True)
     grp = JntGrp.aggregate('{}_DRV'.format(name), groupList, 'N')
-    return grp
+    return [grp]
 
 def drivenJoints(name, Curve, amount, type, upVector):
     drivenJNTs = makeJoints(name, amount, 'driven', 0.5)
@@ -104,13 +95,30 @@ def drivenJoints(name, Curve, amount, type, upVector):
     grp = JntGrp.aggregate('{}_DRN'.format(name), groupList, 'N')
     return grp
 
-def rigIt(name, CtrlAmount, DrivenAmount, type, position, upVector):
+def ctrl(side, name, shape, size, amountOfSubCtrls, JointList, positions):
+
+    ctrlsDictionary = {}
+    counter = 1
+    for jnt, pos in zip(JointList, positions):
+        ctrls = controls.make(side, shape, name, size, amountOfSubCtrls)
+        controls.translate(ctrls, [pos])
+
+        pm.parentConstraint(ctrls['ctrl'], jnt)
+        pm.scaleConstraint(ctrls['ctrl'], jnt)
+
+        ctrlsDictionary['{}_{}'.format(name, counter)] = ctrls 
+        counter +=1
+
+    return ctrlsDictionary
+
+
+def rigIt(side, name, CtrlAmount, DrivenAmount, type, position, upVector):
     groupList = []
     CurveList = makeCurve(name, type, position)
     Curve = CurveList[-1]; CurveGroups = CurveList[:-1]
 
-    driverJNTs = driverJoints(name, CtrlAmount, Curve, type)
-    drivenJNTs = drivenJoints(name, Curve, DrivenAmount, type, upVector)
+    driverJNTs = driverJoints(side, name, CtrlAmount, Curve, type)
+    drivenJNTs = drivenJoints(side, name, Curve, DrivenAmount, type, upVector)
 
 
     groupList.append(CurveGroups[0]);
@@ -120,17 +128,17 @@ def rigIt(name, CtrlAmount, DrivenAmount, type, position, upVector):
     return main.aggregate('{}_ROOT'.format(name), groupList, 'N')
 
 
-def simpleRopeRig(name, CtrlAmount, DrivenAmount):
+def simpleRopeRig(side, name, shape, CtrlAmount, DrivenAmount):
     points=[]
     for i in range(CtrlAmount * 2):
         points.append((0, i, 0))
 
-    return rigIt(name, CtrlAmount, DrivenAmount, 'rope', points, (1,0,0))
+    return rigIt(side, name, shape, CtrlAmount, DrivenAmount, 'rope', points, (1,0,0))
 
-def simpleCircleRig(name, CtrlAmount, DrivenAmount):
-    return rigIt(name, CtrlAmount, DrivenAmount, 'simpleCircle', CtrlAmount * 2, (1,0,0))
+def simpleCircleRig(side, name, shape, CtrlAmount, DrivenAmount):
+    return rigIt(side, name, shape, CtrlAmount, DrivenAmount, 'simpleCircle', CtrlAmount * 2, (1,0,0))
 
-def overSelection(name, type, DrivenAmount, positionList, ctrlsPositions, upVector):
+def overSelection(side, name, type, DrivenAmount, positionList, ctrlsPositions, upVector):
     groupList = []
     CurveList = makeCurve(name, type, positionList)
     Curve = CurveList[-1]; CurveGroups = CurveList[:-1]
