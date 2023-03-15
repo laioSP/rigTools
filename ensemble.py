@@ -20,7 +20,7 @@ class grouper:
         pm.delete(target)
 
     def check(self, target):
-        return cmds.objExists(target)
+        return pm.objExists(target)
 
     def sequenceParenting(self, target):
         for grp in range(len(self.groupDictionary[target]) - 1):
