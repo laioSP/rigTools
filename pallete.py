@@ -8,19 +8,19 @@ class locator:
         self.dataList = {'geo': [self.obj]}
         self.newData = ['geo']
 
-    def addData(self, type, data):
-        if type in self.dataList:
-            self.dataList[type].append(data)
+    def addData(self, category, data):
+        if category in self.dataList:
+            self.dataList[category].append(data)
         else:
-            self.dataList[type] = [data]
+            self.dataList[category] = [data]
 
-        self.newData.append(type)
+        self.newData.append(category)
         return self.dataList
 
     def loadData(self):
-        for dataType in self.newData:
-            self.loc.addAttr(dataType, type='string')
-            self.loc.setAttr(dataType, self.dataList[dataType])
+        for datacategory in self.newData:
+            self.loc.addAttr(datacategory, category='string')
+            self.loc.setAttr(datacategory, self.dataList[datacategory])
         del self.newData[:]
 
     def makeLocator(self):
@@ -36,7 +36,7 @@ class transform:
     def match(self, target):
         pass
         pm.matchTransform(target, position.loc, pos=True, rot=True)
-        position.addData(pm.objectType(target), target)
+        position.addData(pm.objectcategory(target), target)
         position.loadData()
 
     def bySelection(self):
@@ -117,7 +117,7 @@ class center:
 
     def getPosition(self, obj):
         meshOrTransform = {'transform': pm.objectCenter, 'mesh': self.meshPiece, 'joint': pm.objectCenter}
-        return meshOrTransform[pm.objectType(obj)](obj)
+        return meshOrTransform[pm.objectcategory(obj)](obj)
 
     def getVertexPosition(self, obj):
         allVertexPositions = []
@@ -266,7 +266,7 @@ class setDriven:
         self.offsetNodeInput = {'plus': 'input1D[0]', 'multiply': 'input1X'}
         self.offsetNodeOutput = {'plus': 'output1D', 'multiply': 'outputX'}
         self.offsetNodeAttr = {'plus': 'input1D[1]', 'multiply': 'input2X'}
-        self.offsetType = ''
+        self.offsetcategory = ''
 
     def offset(self, difference):
         pass
@@ -275,7 +275,7 @@ class setDriven:
         pass
 
     def network(self):
-        node = self.abbreviationsDict[self.offsetType]
+        node = self.abbreviationsDict[self.offsetcategory]
 
         offsetNode = pm.createNode(self.offsetNodeDict[node])
         pm.connectAttr(self.driver, '{}.{}'.format(offsetNode, self.offsetNodeInput[node]))

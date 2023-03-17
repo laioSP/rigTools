@@ -8,50 +8,121 @@ class grouper:
         self.hierarchy = hierarchy
         self.groupDictionary = {}
 
-    def make(self, side, grpName, type):
+    # create group and add it to self.groupDictionary
+    def make(self, name, category, side):
         nameSide = {'N': '{}_{}', 'C': 'C_{}_{}', 'L': 'L_{}_{}', 'R': 'R_{}_{}'}
-
-        groupName = nameSide[side].format(grpName, type)
+        
+        groupName = nameSide[side].format(name, category)
         pm.select(cl=True)
         grp = pm.group(n=groupName, em=True)
         return grp
 
+    # delete group and remove it from self.groupDictionary
     def delete(self, target):
         pm.delete(target)
 
+    # check if the group exist and if it's in self.groupDictionary
     def check(self, target):
+        
         return pm.objExists(target)
+    # create an empty group sequence following self.groupDictionary
+    def emptyGroupPile(self, name, side):
+        self.groupDictionary[name] = []
+        for category in self.hierarchy:
+            grp = self.make(name, category, side)
+            self.groupDictionary[name].append(grp)
 
-    def sequenceParenting(self, target):
+        self.pileUpParenting(name)
+        return self.groupDictionary[name]
+    
+    # parent a sequence of groups in self.groupDictionary that belongs to the same object
+    # |pCube2_a|pCube2_b|pCube2_c
+    def pileUpParenting(self, target):
         for grp in range(len(self.groupDictionary[target]) - 1):
             pm.parent(self.groupDictionary[target][grp + 1], self.groupDictionary[target][grp])
 
-    def makeHierarchy(self, target, side):
+    # parent a root group of one object to the lowest object of the previous group sequence
+    def linearHierarchy(self, target, side):
         self.groupDictionary[target] = []
-        for type in self.hierarchy:
-            grp = self.make(side, target, type)
+
+        for category in self.hierarchy:
+            grp = self.make(target, category, side)
             self.groupDictionary[target].append(grp)
 
         self.groupDictionary[target].append(target)
-        self.sequenceParenting(target)
+        self.pileUpParenting(target)
         return self.groupDictionary[target]
 
-    def emptyGroup(self, name, side):
-        self.groupDictionary[name] = []
-        for type in self.hierarchy:
-            grp = self.make(side, name, type)
-            self.groupDictionary[name].append(grp)
-
-        self.sequenceParenting(name)
+    # parent the targetList under one group
+    def flatHierarchy(self, name, category, side, targetList):
+        grp = self.make(name, category, side) 
+        pm.parent(targetList, grp)
+        self.groupDictionary[name] = targetList
+        
         return self.groupDictionary[name]
 
-    def aggregate(self, name, target, side):
-        grp = self.emptyGroup(name, 'N')
+    # parent the targetList under one group sequence
+    def pyramidHierarchy(self, name, targetList, side):
+        grp = self.emptyGroupPile(name, 'N')        
 
-        for t in target:
-            if t in self.groupDictionary:
-                pm.parent(self.groupDictionary[t][0], grp[-1])
+        for target in targetList:
+            if target in self.groupDictionary:
+                pm.parent(self.groupDictionary[target][0], grp[-1])
             else:
-                pm.parent(t, grp[-1])
+                pm.parent(target, grp[-1])
 
         return self.groupDictionary[name]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

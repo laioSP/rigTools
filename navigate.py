@@ -33,7 +33,7 @@ def meshPiece(obj):
 
 def getPosition(obj):
     meshOrTransform = {'transform': pm.objectCenter, 'mesh': meshPiece, 'joint': pm.objectCenter}
-    return meshOrTransform[pm.objectType(obj)](obj)
+    return meshOrTransform[pm.objectcategory(obj)](obj)
 
 def getListPosition(list):
     position = []
