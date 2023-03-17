@@ -1,12 +1,7 @@
 import pymel.core as pm
 import controls
-import basicTools as bt
-import ensemble
-
-JntGrp = ensemble.grouper(hierarchy=['offset'])
-ctrlGrp = ensemble.grouper(hierarchy=['main', 'position', 'offset', 'ctrl', 'constraint'])
-main = ensemble.grouper(hierarchy=['main'])
-
+#import ensemble 
+from groupSettings import nurbRigGrp, allGroups
 
 def motionPath(drivenList, Curve, category):
 
@@ -32,11 +27,11 @@ def makeCurve(name, category, pointPositions, degreeAmount = 3):
         return Curve
 
     def simpleCircle():
-        Curve = pm.circle(degree=degreeAmount, s=len(pointPositions), n='{}_driven_CRV'.format(name), r=5)[0]
+        Curve = pm.circle(degree=degreeAmount, s=pointPositions, n='{}_driven_CRV'.format(name), r=5)[0]
         return Curve
 
     def circleCurve():
-        Curve = pm.circle(degree=degreeAmount, s=len(pointPositions), n='{}_driven_CRV'.format(name), r=5)[0]
+        Curve = pm.circle(degree=degreeAmount, s=pointPositions, n='{}_driven_CRV'.format(name), r=5)[0]
         for cv, pos in zip(Curve.cv, pointPositions):
             cv.setPosition(pos)
 
@@ -48,10 +43,10 @@ def makeCurve(name, category, pointPositions, degreeAmount = 3):
         'simpleCircle': simpleCircle}
 
     Curve = curveChoice[category]()
-    grp = JntGrp.flatHierarchy( '{}{}'.format(name, category), 'NURB', 'N', Curve)
+    grp = nurbRigGrp.flatHierarchy( '{}{}'.format(name, category.upper()), 'NURB', 'N', Curve)
     Curve.setAttr('template', True)
 
-    return grp
+    return Curve
 
 def makeJoints(name, amount, category, radius):
     jointList = []
@@ -68,14 +63,12 @@ def driverJoints(side, name, amount, Curve, category):
     motionNodes = motionPath(driverJNTs, Curve, category)
 
     positions = list(map(lambda jnt: pm.xform(jnt, q=True, worldSpace=True, translation=True), driverJNTs))
-
-    #ctrlList = ctrl(side, name, shape, name, 10, 3, JointList, positions)
-
+    
     pm.delete(motionNodes)
     pm.skinCluster(driverJNTs, Curve, toSelectedBones=True)
-    group = JntGrp.flatHierarchy(name ,'DRV', side, driverJNTs)
+    nurbRigGrp.flatHierarchy(name ,'DRV', side, driverJNTs)
     pm.select(cl=True)
-    return group
+    return driverJNTs
 
 def drivenJoints(side, name, amount, Curve, category, upVector):
     drivenJNTs = makeJoints(name, amount, 'driven', 0.5)
@@ -84,24 +77,9 @@ def drivenJoints(side, name, amount, Curve, category, upVector):
     for jnt in drivenJNTs:
         pm.tangentConstraint(Curve, jnt, wu=upVector)
     
-    return JntGrp.flatHierarchy(name ,'DRN', side, drivenJNTs)
-
-def ctrl(side, name, shape, size, amountOfSubCtrls, JointList, positions):
-
-    ctrlsDictionary = {}
-    counter = 1
-    for jnt, pos in zip(JointList, positions):
-        ctrls = controls.make(side, shape, name, size, amountOfSubCtrls)
-        controls.translate(ctrls, [pos])
-
-        pm.parentConstraint(ctrls['ctrl'], jnt)
-        pm.scaleConstraint(ctrls['ctrl'], jnt)
-
-        ctrlsDictionary['{}_{}'.format(name, counter)] = ctrls 
-        counter +=1
-
-    return ctrlsDictionary
-
+    nurbRigGrp.flatHierarchy(name ,'DRN', side, drivenJNTs)
+    
+    return  drivenJNTs
 
 def rigIt(side, name, CtrlAmount, DrivenAmount, category, position, upVector, controlShape):
     groupList = []
@@ -112,12 +90,16 @@ def rigIt(side, name, CtrlAmount, DrivenAmount, category, position, upVector, co
     drivenJNTs = drivenJoints(side, name, DrivenAmount, curve, category, upVector)
     ctrl = controls.makeControls(side, name, controlShape, 3, 3, driverJNTs)
 
-    nurbRig = {'ctrl' : ctrl, 'driverJoints' : driverJNTs, 'drivenJoints' : drivenJNTs}
+    nurbRig = {'ctrl' : controls.ctrlsDictionary, 'driverJoints' : driverJNTs, 'drivenJoints' : drivenJNTs}
+    
+    groupList = [nurbRigGrp.groupDictionary.keys(), allGroups['ctrl'].keys()[-1]]
+    
+    nurbRigGrp.flatHierarchy(name, '{}rig'.format(category.upper()), side, nurbRigGrp.groupDictionary.keys())
     #groupList.append(CurveGroups[0]);
     #groupList.append(driverJNTs[0]);
     #groupList.append(drivenJNTs[0]);
 
-    #return nurbRig
+    return nurbRig
 
 
 def simpleRopeRig(side, name, shape, CtrlAmount, DrivenAmount, controlShape):

@@ -1,6 +1,5 @@
 import pymel.core as pm
 
-
 class grouper:
     hierarchy = []
 
@@ -57,9 +56,9 @@ class grouper:
     def flatHierarchy(self, name, category, side, targetList):
         grp = self.make(name, category, side) 
         pm.parent(targetList, grp)
-        self.groupDictionary[name] = targetList
+        self.groupDictionary[grp] = targetList
         
-        return self.groupDictionary[name]
+        return grp
 
     # parent the targetList under one group sequence
     def pyramidHierarchy(self, name, targetList, side):
@@ -75,6 +74,10 @@ class grouper:
 
 
 
+ctrlGroup = grouper(hierarchy=['main', 'POS', 'OFFSET'])
+nurbRigGrp = grouper(hierarchy=['offset'])
+
+allGroups = {'ctrl' : ctrlGroup.groupDictionary, 'nurbRig' : nurbRigGrp.groupDictionary}
 
 
 
