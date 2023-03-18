@@ -1,7 +1,10 @@
 import pymel.core as pm
 import controls
-#import ensemble 
-from groupSettings import nurbRigGrp, allGroups
+import ensemble
+#from groupSettings import nurbRigGrp, flatGroups
+
+
+nurbRigGrp = ensemble.grouper(hierarchy=['offset'])
 
 def motionPath(drivenList, Curve, category):
 
@@ -43,7 +46,7 @@ def makeCurve(name, category, pointPositions, degreeAmount = 3):
         'simpleCircle': simpleCircle}
 
     Curve = curveChoice[category]()
-    grp = nurbRigGrp.flatHierarchy( '{}{}'.format(name, category.upper()), 'NURB', 'N', Curve)
+    grp = nurbRigGrp.flatHierarchy( '{}{}'.format(name, category.capitalize()), 'NURB', 'N', Curve)
     Curve.setAttr('template', True)
 
     return Curve
@@ -92,13 +95,12 @@ def rigIt(side, name, CtrlAmount, DrivenAmount, category, position, upVector, co
 
     nurbRig = {'ctrl' : controls.ctrlsDictionary, 'driverJoints' : driverJNTs, 'drivenJoints' : drivenJNTs}
     
-    groupList = [nurbRigGrp.groupDictionary.keys(), allGroups['ctrl'].keys()[-1]]
-    
-    nurbRigGrp.flatHierarchy(name, '{}rig'.format(category.upper()), side, nurbRigGrp.groupDictionary.keys())
+    nurbRigGrp.flatHierarchy(name, '{}Rig'.format(category.capitalize()), side, list(ensemble.flatGroups.keys()))
     #groupList.append(CurveGroups[0]);
     #groupList.append(driverJNTs[0]);
     #groupList.append(drivenJNTs[0]);
-
+    ensemble.clearflatGroups()
+    pm.select(cl=True)
     return nurbRig
 
 

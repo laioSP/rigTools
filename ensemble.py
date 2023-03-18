@@ -1,5 +1,8 @@
 import pymel.core as pm
 
+
+flatGroups ={}
+
 class grouper:
     hierarchy = []
 
@@ -16,14 +19,15 @@ class grouper:
         grp = pm.group(n=groupName, em=True)
         return grp
 
-    # delete group and remove it from self.groupDictionary
+    # remove it from self.groupDictionary
     def delete(self, target):
-        pm.delete(target)
+        del self.groupDictionary[target]
 
-    # check if the group exist and if it's in self.groupDictionary
-    def check(self, target):
-        
-        return pm.objExists(target)
+    # check if the group exist and if not, it delete from self.groupDictionary
+    def check(self, target): 
+        cond = {True : lambda doNothing : doNothing, False : self.delete}             
+        cond[pm.objExists(target)](target)  
+
     # create an empty group sequence following self.groupDictionary
     def emptyGroupPile(self, name, side):
         self.groupDictionary[name] = []
@@ -50,6 +54,7 @@ class grouper:
 
         self.groupDictionary[target].append(target)
         self.pileUpParenting(target)
+        
         return self.groupDictionary[target]
 
     # parent the targetList under one group
@@ -57,7 +62,8 @@ class grouper:
         grp = self.make(name, category, side) 
         pm.parent(targetList, grp)
         self.groupDictionary[grp] = targetList
-        
+        flatGroups[grp] = self.groupDictionary[grp]
+
         return grp
 
     # parent the targetList under one group sequence
@@ -73,23 +79,9 @@ class grouper:
         return self.groupDictionary[name]
 
 
-
-ctrlGroup = grouper(hierarchy=['main', 'POS', 'OFFSET'])
-nurbRigGrp = grouper(hierarchy=['offset'])
-
-allGroups = {'ctrl' : ctrlGroup.groupDictionary, 'nurbRig' : nurbRigGrp.groupDictionary}
-
-
-
-
-
-
-
-
-
-
-
-
+def clearflatGroups():
+    flatGroups.clear()
+    
 
 
 

@@ -1,9 +1,10 @@
 import nurbShapes
 import pymel.core as pm
 import basicTools
-from groupSettings import ctrlGroup
+import ensemble
 
 ctrlsDictionary = {}
+ctrlGroup = ensemble.grouper(hierarchy=['main', 'POS', 'OFFSET'])
 
 def make(side, shape, name, size, amountOfSubCtrls, note=''):
     
