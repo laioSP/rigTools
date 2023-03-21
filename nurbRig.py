@@ -51,18 +51,10 @@ def makeCurve(name, category, pointPositions, degreeAmount = 3):
 
     return Curve
 
-def makeJoints(name, amount, category, radius):
-    jointList = []
-    digits = len(str(amount))
-    for i in range(amount):
-        jnt = pm.joint(n='{}_{:0{}d}_{}_JNT'.format(name, i + 1, digits, category), rad=radius)
-        pm.parent(jnt, w=True)
-        jointList.append(jnt)
 
-    return jointList
 
 def driverJoints(side, name, amount, Curve, category):
-    driverJNTs = makeJoints(name, amount, 'driver', 1.5)
+    driverJNTs = controls.makeJoints(name, amount, 'driver', 1.5)
     motionNodes = motionPath(driverJNTs, Curve, category)
 
     positions = list(map(lambda jnt: pm.xform(jnt, q=True, worldSpace=True, translation=True), driverJNTs))
@@ -74,7 +66,7 @@ def driverJoints(side, name, amount, Curve, category):
     return driverJNTs
 
 def drivenJoints(side, name, amount, Curve, category, upVector):
-    drivenJNTs = makeJoints(name, amount, 'driven', 0.5)
+    drivenJNTs = controls.makeJoints(name, amount, 'driven', 0.5)
     motionPath(drivenJNTs, Curve, category)
 
     for jnt in drivenJNTs:
@@ -84,37 +76,39 @@ def drivenJoints(side, name, amount, Curve, category, upVector):
     
     return  drivenJNTs
 
-def rigIt(side, name, CtrlAmount, DrivenAmount, category, position, upVector, controlShape):
-    groupList = []
-    curve = makeCurve(name, category, position)
-    #Curve = CurveList[-1]; CurveGroups = CurveList[:-1]
+def rigIt(side, name, CtrlAmount, DrivenAmount, category, position, upVector, controlShape, degreeAmount = 3):
+    curve = makeCurve(name, category, position, degreeAmount)
 
     driverJNTs = driverJoints(side, name, CtrlAmount, curve, category)
     drivenJNTs = drivenJoints(side, name, DrivenAmount, curve, category, upVector)
     ctrl = controls.makeControls(side, name, controlShape, 3, 3, driverJNTs)
-
-    nurbRig = {'ctrl' : controls.ctrlsDictionary, 'driverJoints' : driverJNTs, 'drivenJoints' : drivenJNTs}
+    nurbRigGrp.flatGroups[ctrl]=[]
+    nurbRig = {'ctrl' : ctrl, 'driverJoints' : driverJNTs, 'drivenJoints' : drivenJNTs}
     
-    nurbRigGrp.flatHierarchy(name, '{}Rig'.format(category.capitalize()), side, list(ensemble.flatGroups.keys()))
-    #groupList.append(CurveGroups[0]);
-    #groupList.append(driverJNTs[0]);
-    #groupList.append(drivenJNTs[0]);
-    ensemble.clearflatGroups()
+    nurbRigGrp.flatHierarchy(name, '{}Rig'.format(category.capitalize()), side, list(nurbRigGrp.flatGroups.keys()))
+    nurbRigGrp.clearflatGroups()
     pm.select(cl=True)
     return nurbRig
 
-
-def simpleRopeRig(side, name, shape, CtrlAmount, DrivenAmount, controlShape):
+def simpleRopeRig(side, name, CtrlAmount, DrivenAmount, shape, degreeAmount = 3):
     points=[]
     for i in range(CtrlAmount * 2):
         points.append((0, i, 0))
 
-    return rigIt(side, name, CtrlAmount, DrivenAmount, 'rope', points, (1,0,0), controlShape)
+    return rigIt(side, name, CtrlAmount, DrivenAmount, 'rope', points, (1,0,0), shape, degreeAmount)
 
-def simpleCircleRig(side, name, shape, CtrlAmount, DrivenAmount, controlShape):
-    return rigIt(side, name, CtrlAmount, DrivenAmount, 'simpleCircle', CtrlAmount * 2, (1,0,0), controlShape)
+def stiffRopeRig(side, name, CtrlAmount, DrivenAmount, shape, degreeAmount = 1):
+    points=[]
+    for i in range(CtrlAmount):
+        points.append((0, i*3, 0))
 
-def overSelection(side, name, category, DrivenAmount, positionList, ctrlsPositions, upVector, controlShape):
+    return rigIt(side, name, CtrlAmount, DrivenAmount, 'rope', points, (1,0,0), shape, degreeAmount)
+
+
+def simpleCircleRig(side, name, shape, CtrlAmount, DrivenAmount):
+    return rigIt(side, name, CtrlAmount, DrivenAmount, 'simpleCircle', CtrlAmount * 2, (1,0,0), shape)
+
+def customPositions(side, name, category, DrivenAmount, positionList, ctrlsPositions, upVector, controlShape):
     groupList = []
     CurveList = makeCurve(name, category, positionList)
     Curve = CurveList[-1]; CurveGroups = CurveList[:-1]
@@ -125,6 +119,8 @@ def overSelection(side, name, category, DrivenAmount, positionList, ctrlsPositio
     groupList.append(CurveGroups[0]);
     groupList.append(driverJNTs[0]);
     groupList.append(drivenJNTs[0]);
+    
+    ensemble.clearflatGroups()
 
     return main.pyramidHierarchy('{}_ROOT'.format(name), groupList, 'N')
 

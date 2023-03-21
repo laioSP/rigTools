@@ -1,7 +1,7 @@
 import pymel.core as pm
 
 
-flatGroups ={}
+
 
 class grouper:
     hierarchy = []
@@ -9,6 +9,7 @@ class grouper:
     def __init__(self, hierarchy):
         self.hierarchy = hierarchy
         self.groupDictionary = {}
+        self.flatGroups ={}
 
     # create group and add it to self.groupDictionary
     def make(self, name, category, side):
@@ -20,12 +21,12 @@ class grouper:
         return grp
 
     # remove it from self.groupDictionary
-    def delete(self, target):
+    def remove(self, target):
         del self.groupDictionary[target]
 
     # check if the group exist and if not, it delete from self.groupDictionary
     def check(self, target): 
-        cond = {True : lambda doNothing : doNothing, False : self.delete}             
+        cond = {True : lambda doNothing : doNothing, False : self.remove}             
         cond[pm.objExists(target)](target)  
 
     # create an empty group sequence following self.groupDictionary
@@ -62,7 +63,7 @@ class grouper:
         grp = self.make(name, category, side) 
         pm.parent(targetList, grp)
         self.groupDictionary[grp] = targetList
-        flatGroups[grp] = self.groupDictionary[grp]
+        self.flatGroups[grp] = self.groupDictionary[grp]
 
         return grp
 
@@ -78,9 +79,8 @@ class grouper:
 
         return self.groupDictionary[name]
 
-
-def clearflatGroups():
-    flatGroups.clear()
+    def clearflatGroups(self):
+        self.flatGroups.clear()
     
 
 

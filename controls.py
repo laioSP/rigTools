@@ -22,6 +22,7 @@ def make(side, shape, name, size, amountOfSubCtrls, note=''):
 
         ctrlsDictionary[nam] = sub
         counter += 1
+    print(nameList)
 
     return nameList[0]
 
@@ -35,8 +36,8 @@ def ctrlCurve(side, shape, name, size):
 def jointConstraint(name, driver):
     jnt = pm.joint(n='{}_DRV_JNT'.format(name))
     grp = drvJntGroup.createHierarchy(jnt, 'N')
-    pm.parentConstraint(driver, jnt)
-    pm.scaleConstraint(driver, jnt)
+    pm.parentConstraint(driver, jnt, mo=True)
+    pm.scaleConstraint(driver, jnt, mo=True)
 
     return jnt
 
@@ -49,19 +50,58 @@ def translate(ctrlsHierarchy, positions):
 
     return positionGroupList
 
+def makeJoints(name, amount, category, radius):
+    pm.select(cl=True)
+    jointList = []
+    digits = len(str(amount))
+    for i in range(amount):
+        jnt = pm.joint(n='{}_{:0{}d}_{}_JNT'.format(name, i + 1, digits, category), rad=radius)
+        pm.parent(jnt, w=True)
+        jointList.append(jnt)
+        
+    return jointList
+
 def makeControls(side, name, shape, size, amountOfSubCtrls, JointList):
       
     positions = list(map(lambda jnt: pm.xform(jnt, q=True, worldSpace=True, translation=True), JointList))
+    rotation = list(map(lambda jnt: pm.xform(jnt, q=True, worldSpace=True, rotation=True), JointList))
     nameList = basicTools.numberedName(name, None, None, len(JointList))
     
-    for jnt, pos, nam in zip(JointList, positions, nameList):
+    for jnt, pos, rot, nam in zip(JointList, positions, rotation, nameList):
         
         ctrl = make(side, shape, nam, size, amountOfSubCtrls)
         ctrlsDictionary[ctrl][1].setAttr('t', pos)
+        ctrlsDictionary[ctrl][1].setAttr('r', rot)
         pm.parentConstraint(ctrlsDictionary[ctrl][-1], jnt)
         pm.scaleConstraint(ctrlsDictionary[ctrl][-1], jnt)
 
     mainGroups = map(lambda g : ctrlsDictionary[g][0], ctrlsDictionary.keys() )
     grp = ctrlGroup.flatHierarchy(name, 'CTRL', side, mainGroups)
-    
+    ctrlsDictionary.clear()
     return grp
+
+def makeFk(side, name, shape, size, amountOfSubCtrls, translation = (0,0,0), rotation = (0,0,0)):
+    
+    jnt = makeJoints(name, amountOfSubCtrls, 'FK', 1) 
+    
+    print(jnt[0], translation, rotation)
+
+    jnt[0].setAttr('t', translation)
+    jnt[0].setAttr('r', rotation)
+
+    ctrl = makeControls(side, name, shape, size, amountOfSubCtrls, jnt)
+    jntGroup = ctrlGroup.flatHierarchy(name ,'FKJNT', side, jnt)
+    
+    grp = ctrlGroup.flatHierarchy(name, 'FK', side, [ctrl, jntGroup])
+    
+    fkDictionary = {'ctrl' : ctrl, 'driverJoints' : jnt, 'group' : grp}
+    
+    pm.select(cl=True)
+    ctrlGroup.clearflatGroups()    
+    return fkDictionary
+    
+    
+    
+    
+    ctrlGroup.flatHierarchy(name, 'CTRL', side, mainGroups)
+    
