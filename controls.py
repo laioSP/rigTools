@@ -5,6 +5,7 @@ import ensemble
 
 ctrlsDictionary = {}
 ctrlGroup = ensemble.grouper(hierarchy=['main', 'POS', 'OFFSET'])
+jntGroup = ensemble.grouper(hierarchy=['OFFSET'])
 
 def make(side, shape, name, size, amountOfSubCtrls, note=''):
     
@@ -35,7 +36,7 @@ def ctrlCurve(side, shape, name, size):
 
 def jointConstraint(name, driver):
     jnt = pm.joint(n='{}_DRV_JNT'.format(name))
-    grp = drvJntGroup.createHierarchy(jnt, 'N')
+    grp = jntGroup.createHierarchy(jnt, 'N')
     pm.parentConstraint(driver, jnt, mo=True)
     pm.scaleConstraint(driver, jnt, mo=True)
 
@@ -100,8 +101,4 @@ def makeFk(side, name, shape, size, amountOfSubCtrls, translation = (0,0,0), rot
     ctrlGroup.clearflatGroups()    
     return fkDictionary
     
-    
-    
-    
-    ctrlGroup.flatHierarchy(name, 'CTRL', side, mainGroups)
     

@@ -1,8 +1,6 @@
 import pymel.core as pm
 import controls
 import ensemble
-#from groupSettings import nurbRigGrp, flatGroups
-
 
 nurbRigGrp = ensemble.grouper(hierarchy=['offset'])
 
@@ -120,7 +118,5 @@ def customPositions(side, name, category, DrivenAmount, positionList, ctrlsPosit
     groupList.append(driverJNTs[0]);
     groupList.append(drivenJNTs[0]);
     
-    ensemble.clearflatGroups()
-
-    return main.pyramidHierarchy('{}_ROOT'.format(name), groupList, 'N')
+    nurbRigGrp.clearflatGroups()
 
