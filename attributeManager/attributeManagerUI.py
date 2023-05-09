@@ -11,6 +11,9 @@ class MainWindow(QMainWindow):
         self.mainLayout = QGridLayout()
         self.axisLayout = QGridLayout()
         self.attributeButtonsLayout = QGridLayout()
+        
+        self.mainLayout.fillHeight(True)
+    
 
         self.loadSelection = QPushButton("load selection")
         self.translate = QPushButton("translate")
@@ -28,7 +31,7 @@ class MainWindow(QMainWindow):
 
 
 
-        self.mainLayout.addWidget(self.loadSelection, 0,0, 3,1)
+        self.mainLayout.addWidget(self.loadSelection, 0,0, 1, 3)
         self.mainLayout.addLayout(self.attributeButtonsLayout, 0, 1)
         self.attributeButtonsLayout.addLayout(self.axisLayout, 0, 0)
 
