@@ -1,5 +1,5 @@
 import sys
-from PySide2.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout, QPushButton,QCheckBox 
+from PySide2.QtWidgets import QApplication, QMainWindow, QSizePolicy, QWidget, QGridLayout, QHBoxLayout, QPushButton,QCheckBox 
 
 class MainWindow(QMainWindow):
 
@@ -8,11 +8,10 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("attribute match")
 
-        self.mainLayout = QGridLayout()
+        self.mainLayout = QHBoxLayout()
         self.axisLayout = QGridLayout()
         self.attributeButtonsLayout = QGridLayout()
         
-        self.mainLayout.fillHeight(True)
     
 
         self.loadSelection = QPushButton("load selection")
@@ -22,6 +21,9 @@ class MainWindow(QMainWindow):
         self.checkBoxX = QCheckBox("X")
         self.checkBoxY = QCheckBox("Y")
         self.checkBoxZ = QCheckBox("Z")
+                
+        self.loadSelection.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
 
         
         self.checkBoxX.setChecked(True)
@@ -31,8 +33,8 @@ class MainWindow(QMainWindow):
 
 
 
-        self.mainLayout.addWidget(self.loadSelection, 0,0, 1, 3)
-        self.mainLayout.addLayout(self.attributeButtonsLayout, 0, 1)
+        self.mainLayout.addWidget(self.loadSelection)
+        self.mainLayout.addLayout(self.attributeButtonsLayout)
         self.attributeButtonsLayout.addLayout(self.axisLayout, 0, 0)
 
         self.axisLayout.addWidget(self.checkBoxX, 0,0)
