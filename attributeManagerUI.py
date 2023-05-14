@@ -1,13 +1,8 @@
 import sys
 from PySide2.QtGui import QPalette, QColor
-from PySide2.QtWidgets import QApplication, QMainWindow, QSizePolicy, QWidget, QGridLayout, QPushButton,QCheckBox
-#import navigate
-
-def nope():
-    print('nope')
-
-
-
+from PySide2.QtWidgets import QApplication, QMainWindow, QSizePolicy, QWidget, QGridLayout, QPushButton,QCheckBox, QSpinBox
+import navigate
+import pymel.core as pm
 
 class MainWindow(QMainWindow):
 
@@ -21,24 +16,33 @@ class MainWindow(QMainWindow):
         layoutInputs = {'placeholderLayout' : {'stepLayout':{}}, 'matchLayout' : {'setPositionsLayout':{'axisLayout':{},'attributesLayout':{}}}} 
 
         self.chainLayout(layoutInputs, mainLayout)
-
-        print (self.builtLayouts)
-
+        
+        self.intBox = QSpinBox()
         self.centerOfSelection = self.button("center of selection")
+        self.tie = self.button("tie")
+        self.centerOfSelection.clicked.connect(lambda: navigate.ofAll(pm.ls(os=True, fl=True)))
         self.centerOfEach = self.button("center of each")
-        self.centerOfStep= self.button("center of step")
-
-        self.loadSelection = self.button("load selection", com, ["bas"])
+        self.centerOfEach.clicked.connect(lambda: navigate.ofEach(pm.ls(os=True, fl=True)))
+        
+        self.centerOfStep= self.button("center of step")#.clicked.connect(navigate.ofStep(pm.ls(os=True, fl=True)))
+        self.subdivide= self.button("subdivide")
+        
+        self.loadSelection = self.button("load selection")
         self.translate = self.button("translate")
         self.rotate = self.button("rotate")
         self.scale = self.button("scale")
+        self.allAttributes = self.button("all attributes")
         self.checkBoxX = self.checkBox("X")
         self.checkBoxY = self.checkBox("Y")
-        self.checkBoxZ = self.checkBox("Z")
-                
+        self.checkBoxZ = self.checkBox("Z")      
+        
+        self.scale.clicked.connect(lambda: pm.ls(os=True, fl=True))
 
-
-        self.builtLayouts['stepLayout'].addWidget(self.centerOfStep, 0, 0)
+        self.builtLayouts['stepLayout'].addWidget(self.subdivide, 0, 1,2,1)
+        self.builtLayouts['stepLayout'].addWidget(self.tie, 0, 2,2,1)
+        self.builtLayouts['stepLayout'].addWidget(self.intBox, 0, 0)
+        self.builtLayouts['stepLayout'].addWidget(self.centerOfStep, 1, 0)
+        
 
         self.builtLayouts['placeholderLayout'].addWidget(self.centerOfSelection, 1, 0)
         self.builtLayouts['placeholderLayout'].addWidget(self.centerOfEach, 2, 0)
@@ -52,10 +56,8 @@ class MainWindow(QMainWindow):
         self.builtLayouts['attributesLayout'].addWidget(self.translate,0,1)
         self.builtLayouts['attributesLayout'].addWidget(self.rotate,1,1)
         self.builtLayouts['attributesLayout'].addWidget(self.scale,2,1)
-
+        self.builtLayouts['attributesLayout'].addWidget(self.allAttributes,3,1)
         
- 
-
         widget = QWidget()
         widget.setLayout( mainLayout )
         self.setCentralWidget(widget)
@@ -64,8 +66,7 @@ class MainWindow(QMainWindow):
     @staticmethod
     def button(name, function=nope, inputs=[]):
         pushButton=QPushButton(name)
-        pushButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)   
-        pushButton.clicked.connect(lambda: function(*inputs))
+        pushButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
   
         return pushButton
     
@@ -90,21 +91,9 @@ class MainWindow(QMainWindow):
                 for child in layoutDictionary[layoutName]:   
                     childLayout = self.chainLayout(layoutDictionary[layoutName], grid)
                     self.builtLayouts[child] = childLayout
-
         
         return grid
 
     
-def com(st):
-    print('{}work!!!!!!!!!!!!!!!!'.format(st))
-    
-
-
-
-app = QApplication(sys.argv)
 window = MainWindow()
 window.show()
-
-app.exec_()
-
-

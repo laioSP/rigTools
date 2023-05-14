@@ -1,8 +1,3 @@
-
-
-
-
-
 import pymel.core as pm
 import placeholder
 def unpackAxis(obj):
