@@ -1,23 +1,12 @@
 import sys
-
-from PySide2.QtCore import Qt
 from PySide2.QtGui import QPalette, QColor
+from PySide2.QtWidgets import QApplication, QMainWindow, QSizePolicy, QWidget, QGridLayout, QPushButton,QCheckBox
+#import navigate
+
+def nope():
+    print('nope')
 
 
-
-
-from PySide2.QtWidgets import QApplication, QMainWindow, QSizePolicy, QWidget, QGridLayout, QHBoxLayout, QPushButton,QCheckBox
-
-
-class Color(QWidget):
-
-    def __init__(self, color):
-        super(Color, self).__init__()
-        self.setAutoFillBackground(True)
-
-        palette = self.palette()
-        palette.setColor(QPalette.Window, QColor(color))
-        self.setPalette(palette)
 
 
 class MainWindow(QMainWindow):
@@ -39,7 +28,7 @@ class MainWindow(QMainWindow):
         self.centerOfEach = self.button("center of each")
         self.centerOfStep= self.button("center of step")
 
-        self.loadSelection = self.button("load selection")
+        self.loadSelection = self.button("load selection", com, ["bas"])
         self.translate = self.button("translate")
         self.rotate = self.button("rotate")
         self.scale = self.button("scale")
@@ -63,6 +52,8 @@ class MainWindow(QMainWindow):
         self.builtLayouts['attributesLayout'].addWidget(self.translate,0,1)
         self.builtLayouts['attributesLayout'].addWidget(self.rotate,1,1)
         self.builtLayouts['attributesLayout'].addWidget(self.scale,2,1)
+
+        
  
 
         widget = QWidget()
@@ -71,21 +62,20 @@ class MainWindow(QMainWindow):
 
 
     @staticmethod
-    def button( name):
+    def button(name, function=nope, inputs=[]):
         pushButton=QPushButton(name)
-        pushButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)     
+        pushButton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)   
+        pushButton.clicked.connect(lambda: function(*inputs))
+  
         return pushButton
     
     @staticmethod
-    def checkBox(name):
+    def checkBox(name, checked = True):
         check = QCheckBox(name)
-        check.setChecked(True)
+        check.setChecked(checked)
         check.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         return check
-    
-
-
-   
+       
     def chainLayout(self, layoutDictionary, parent):
         counter=0
 
@@ -105,8 +95,11 @@ class MainWindow(QMainWindow):
         return grid
 
     
-
+def com(st):
+    print('{}work!!!!!!!!!!!!!!!!'.format(st))
     
+
+
 
 app = QApplication(sys.argv)
 window = MainWindow()
