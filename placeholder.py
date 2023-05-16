@@ -1,60 +1,34 @@
 import pymel.core as pm
-import basicTools
+import navigate
 
-dataset = {}
+
+def trashGroup():
+    groupName='trash071'
+
+    if pm.objExists(groupName):
+        None
+    else:
+        pm.group(n=groupName, em=True)
+
+    return pm.ls(groupName)[0]
 
 def make(name=''):
+    grp = trashGroup()
     loc = pm.spaceLocator(n="{}_LOC".format(name))
     locator = pm.ls(loc)[0]
-    dataset[locator] = {}
+    pm.parent(locator, grp)
     return locator
 
 def loadData(locator, dataType, data):
+    strType = str(dataType)
+    locator.addAttr(strType, type='string')
+    locator.setAttr(strType, str(data), l=True)    
 
-    locator.addAttr(dataType, type='string')
-    locator.setAttr(dataType, str(data), l=True)
-    dataset.setdefault(locator, {})
-    dataset[locator].setdefault(dataType, [])
-    dataset[locator][dataType].append(data)
-    return dataset
+def snap(target, position):
+    loc = make(target)
+    for value, axis in zip(position, 'XYZ'):
+        loadData(loc, "{}T{}".format(target, axis), value)
 
-def setTranslate(locator, positions):
-    return setParameter('translate', locator, positions)
-
-def setRotate(locator, positions):
-    return setParameter('rotate', locator, positions)
-
-def setScale(locator, positions):
-    return setParameter('scale', locator, positions)
-
-def setTransform(locator, positions):
-    setParameter('translate', locator, positions[0])
-    setParameter('rotate', locator, positions[1])
-    setParameter('scale', locator, positions[2])
-    return dataset
-
-def setParameter(attribute, locator, position):
-    locator.setAttr(attribute, position)
-    loadData(locator, 'placement_{}'.format(attribute), position)
-    return dataset
-
-def match(locator, target):
-    listOfTargets = basicTools.ensure_list(target)
-    listOfLocators = basicTools.ensure_list(locator)
-
-    for loc, pos in zip(listOfLocators, listOfTargets):
-        pm.matchTransform(loc, pos)
-        loadData(loc, 'position_of', pos)
-
-        translation = loc.getAttr('translate')
-        rotation = loc.getAttr('rotate')
-        loadData(loc, '{}_translate'.format(pos), translation)
-        loadData(loc, '{}_rotate'.format(pos), rotation)
-
-    return dataset
-
-def snap(name, position):
-    loc = make(name)
-    setTranslate(loc, position)
+    navigate.inputAttributes(loc, position, ['t'], ['x', 'y', 'z'])
 
     return loc
