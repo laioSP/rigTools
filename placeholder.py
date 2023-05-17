@@ -1,16 +1,19 @@
 import pymel.core as pm
 import navigate
 
+groupName='tr4sh071'
 
 def trashGroup():
-    groupName='trash071'
-
+    
     if pm.objExists(groupName):
         None
     else:
         pm.group(n=groupName, em=True)
 
     return pm.ls(groupName)[0]
+
+def deleteGroup():
+    pm.delete(groupName)
 
 def make(name=''):
     grp = trashGroup()
@@ -32,3 +35,5 @@ def snap(target, position):
     navigate.inputAttributes(loc, position, ['t'], ['x', 'y', 'z'])
 
     return loc
+
+

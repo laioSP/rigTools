@@ -1,9 +1,6 @@
-import sys
-from PySide2.QtGui import QPalette, QColor
-from PySide2.QtWidgets import QApplication, QMainWindow, QSizePolicy, QWidget, QGridLayout, QPushButton,QCheckBox, QSpinBox
+from PySide2.QtWidgets import QApplication, QLabel, QMainWindow, QSizePolicy, QWidget, QGridLayout, QPushButton,QCheckBox, QSpinBox, QRadioButton, QDoubleSpinBox
 import navigate
 import pymel.core as pm
-from random import uniform
     
 class MainWindow(QMainWindow):
 
@@ -15,12 +12,12 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("attribute match")
 
         mainLayout = QGridLayout()
-        layoutInputs = {'placeholderLayout' : {'stepLayout':{}}, 'matchLayout' : {'setPositionsLayout':{'axisLayout':{},'attributesLayout':{}}}} 
+        layoutInputs = {'placeholderLayout' : {'spacePositionLayout':{}, 'stepLayout':{}}, 'matchLayout' : {'setPositionsLayout':{'axisLayout':{},'attributesLayout':{}}}, "explodeLayout" : {}} 
 
         self.chainLayout(layoutInputs, mainLayout)
         
-        self.stepValue = QSpinBox()
-        self.stepValue.setValue(3)
+        self.stepValue = self.numberBox(3)
+
         self.centerOfSelection = self.button("center of selection")
         self.centerOfSelection.clicked.connect(lambda: navigate.ofAll(pm.ls(os=True, fl=True)))
         
@@ -36,18 +33,31 @@ class MainWindow(QMainWindow):
         self.subdivide= self.button("subdivide")        
         self.subdivide.clicked.connect(lambda : navigate.subDivide(pm.ls(os=True, fl=True), self.stepValue.value()))
 
-        self.maxExplode = QSpinBox()
-        self.minExplode = QSpinBox()
-        self.maxExplode.setValue(25)
-        self.minExplode.setValue(4)
+        self.minLabel = QLabel('min values')
+        self.maxLabel = QLabel('max values')
+        self.maxExplode = self.numberBox(25)
+        self.minExplode = self.numberBox(-25)
+
+
+        self.startKeyLabel = QLabel('start keyframe')
+        self.endKeyLabel = QLabel('end keyframe')
+        self.startKeyExplode = self.numberBox(0)
+        self.endKeyExplode = self.numberBox(120)
+        self.animateExplode = self.checkBox("animate explosion", False)
 
         self.explodeButton= self.button("explode")        
-        self.explodeButton.clicked.connect(lambda : navigate.explode(pm.ls(os=True, fl=True), self.minExplode.value(), self.maxExplode.value(), self.attributeList(), self.axisList()))
+        self.explodeButton.clicked.connect(lambda : navigate.explode(pm.ls(os=True, fl=True), self.minExplode.value(), self.maxExplode.value(), 
+                                                                     self.attributeList(), self.axisList(), self.animateExplode.isChecked(), 
+                                                                     self.startKeyExplode.value(), self.endKeyExplode.value()))
         
         self.loadSelectionButton = self.button("load selection")
         self.loadSelectionButton.setCheckable(True)
         self.loadSelectionButton.setChecked(False)
         self.loadSelectionButton.clicked.connect(lambda checked: self.unloadSelection() if not checked else self.loadSelection())
+
+        self.worldRadio = QRadioButton("world")
+        self.objectRadio = QRadioButton("object")
+        self.worldRadio.setChecked(True)
         
         self.checkBoxX = self.checkBox("X")
         self.checkBoxY = self.checkBox("Y")
@@ -56,35 +66,54 @@ class MainWindow(QMainWindow):
         self.checkBoxTranslate = self.checkBox("translate")
         self.checkBoxRotate = self.checkBox("rotate")
         self.checkBoxScale = self.checkBox("scale")    
+        self.checkBoxScale.setChecked(False)
 
         self.match = self.button("match")
-        self.match.clicked.connect(lambda: navigate.matchAttributes(pm.ls(os=True, fl=True), self.loadedSelection, self.attributeList(), self.axisList()))        
+        self.match.clicked.connect(lambda: navigate.matchAttributes(pm.ls(os=True, fl=True), self.loadedSelection, self.attributeList(), 
+                                                                    self.axisList(), self.spacePostion()))        
 
-        self.builtLayouts['stepLayout'].addWidget(self.subdivide, 0, 1,2,1)
-        self.builtLayouts['stepLayout'].addWidget(self.tie, 0, 2,2,1)
-        self.builtLayouts['stepLayout'].addWidget(self.stepValue, 0, 0)
-        self.builtLayouts['stepLayout'].addWidget(self.centerOfStep, 1, 0)        
+        self.importPlaceholders = self.button("import placeholders")
+        self.clean = self.button("clean up")
+        self.clean.clicked.connect(lambda : navigate.deleteGroup())
 
-        self.builtLayouts['placeholderLayout'].addWidget(self.centerOfSelection, 1, 0)
-        self.builtLayouts['placeholderLayout'].addWidget(self.centerOfEach, 2, 0)
+        self.builtLayouts['spacePositionLayout'].addWidget(self.importPlaceholders, 0, 0, 1, 2)
+        self.builtLayouts['spacePositionLayout'].addWidget(self.worldRadio, 1, 0)
+        self.builtLayouts['spacePositionLayout'].addWidget(self.objectRadio, 1, 1)
+
+        self.builtLayouts['stepLayout'].addWidget(self.stepValue, 1, 0)
+        self.builtLayouts['stepLayout'].addWidget(self.centerOfStep, 2, 0)  
+        self.builtLayouts['stepLayout'].addWidget(self.subdivide, 1, 1, 2, 1)
+        self.builtLayouts['stepLayout'].addWidget(self.tie, 1, 2, 2, 2)
+        
+      
+
+        self.builtLayouts['placeholderLayout'].addWidget(self.centerOfSelection, 2, 0)
+        self.builtLayouts['placeholderLayout'].addWidget(self.centerOfEach, 3, 0)
 
         self.builtLayouts['axisLayout'].addWidget(self.checkBoxX,0,0)
         self.builtLayouts['axisLayout'].addWidget(self.checkBoxY,0,1)
         self.builtLayouts['axisLayout'].addWidget(self.checkBoxZ,0,2)
 
         
-        self.builtLayouts['attributesLayout'].addWidget(self.loadSelectionButton,0,0, 5,1)
+        self.builtLayouts['attributesLayout'].addWidget(self.loadSelectionButton,0,0, 4,1)
         self.builtLayouts['attributesLayout'].addWidget(self.checkBoxTranslate,0,1)
         self.builtLayouts['attributesLayout'].addWidget(self.checkBoxRotate,1,1)
         self.builtLayouts['attributesLayout'].addWidget(self.checkBoxScale,2,1)
         self.builtLayouts['attributesLayout'].addWidget(self.match,3,1)
 
+        self.builtLayouts['explodeLayout'].addWidget(self.minLabel,0,0)
+        self.builtLayouts['explodeLayout'].addWidget(self.maxLabel,0,1)
+        self.builtLayouts['explodeLayout'].addWidget(self.minExplode,1,0)
+        self.builtLayouts['explodeLayout'].addWidget(self.maxExplode,1,1)
 
-        self.explodeLayout = QGridLayout()
-        self.builtLayouts['attributesLayout'].addLayout(self.explodeLayout, 4,1)
-        self.explodeLayout.addWidget(self.minExplode,0,0)
-        self.explodeLayout.addWidget(self.maxExplode,0,1)
-        self.explodeLayout.addWidget(self.explodeButton,1,0, 1, 2)
+        self.builtLayouts['explodeLayout'].addWidget(self.animateExplode, 2,0)
+        self.builtLayouts['explodeLayout'].addWidget(self.startKeyLabel, 3,0)
+        self.builtLayouts['explodeLayout'].addWidget(self.endKeyLabel, 3,1)
+        self.builtLayouts['explodeLayout'].addWidget(self.startKeyExplode, 4,0)
+        self.builtLayouts['explodeLayout'].addWidget(self.endKeyExplode, 4,1)
+        self.builtLayouts['explodeLayout'].addWidget(self.explodeButton,5,0, 1, 2)
+
+        mainLayout.addWidget(self.clean,3,0)
 
         widget = QWidget()
         widget.setLayout( mainLayout )
@@ -121,6 +150,13 @@ class MainWindow(QMainWindow):
     def unloadSelection(self):
         del self.loadedSelection[:]
 
+    def spacePostion(self):
+        if self.objectRadio.isChecked():
+            return 'object'
+        
+        if self.worldRadio.isChecked():
+            return 'world'
+
     @staticmethod
     def button(name):
         pushButton=QPushButton(name)
@@ -134,6 +170,23 @@ class MainWindow(QMainWindow):
         check.setChecked(checked)
         check.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         return check
+    
+    @staticmethod
+    def numberBox(defaultValue, max='noLimit', min = -100000000):
+        box = QDoubleSpinBox()
+        box.setDecimals(2)
+        if max == 'noLimit':
+            box.setMaximum(100000000)  
+        else:
+            box.setMaximum(max)  
+
+        box.setMinimum(min)
+        box.setValue(defaultValue)
+
+        return box
+
+
+
        
     def chainLayout(self, layoutDictionary, parent):
         counter=0

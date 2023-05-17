@@ -111,12 +111,18 @@ def matchAttributes(source, target, attributeList, axisList, reference):
 
                 s.setAttr("{}{}".format(attribute, axis), value)
 
-def explode(target, minimum, maximum, attributeList, axisList):
+def explode(target, minimum, maximum, attributeList, axisList, keyCheck, firstKey, lastKey):
     
     for axis in axisList:
         for attribute in attributeList:
             for t in target:
-                t.setAttr("{}{}".format(attribute, axis), uniform(minimum, maximum))
+                if keyCheck:
+                    pm.setKeyframe(t, at='{}{}'.format(attribute, axis), time=firstKey)
+                    t.setAttr("{}{}".format(attribute, axis), uniform(minimum, maximum))
+                    pm.setKeyframe(t, at='{}{}'.format(attribute, axis), time=lastKey)
+                else:
+                    t.setAttr("{}{}".format(attribute, axis), uniform(minimum, maximum))
+
 
 
 def inputAttributes(obj, targetValue, attributeList, axisList):    
