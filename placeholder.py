@@ -1,39 +1,57 @@
 import pymel.core as pm
 import navigate
+import constants
 
-groupName='tr4sh071'
-
-def trashGroup():
+def placeholdersGroup():
     
-    if pm.objExists(groupName):
+    if pm.objExists(constants.placeholderGroup):
         None
     else:
-        pm.group(n=groupName, em=True)
+        pm.group(n=constants.placeholderGroup, em=True)
 
-    return pm.ls(groupName)[0]
+    return pm.ls(constants.placeholderGroup)[0]
 
 def deleteGroup():
-    pm.delete(groupName)
+    pm.delete(constants.placeholderGroup)
 
 def make(name=''):
-    grp = trashGroup()
+    grp = placeholdersGroup()
     loc = pm.spaceLocator(n="{}_LOC".format(name))
     locator = pm.ls(loc)[0]
+    
+    locator.addAttr(constants.placeholderAttributes[0], type='string')
+    locator.setAttr(constants.placeholderAttributes[0], name, l=True)  
+    for attr in constants.placeholderAttributes[1:]:
+        for axis in constants.axis:        
+            locator.addAttr("{}{}".format(attr, axis.upper()), type='float')
+
     pm.parent(locator, grp)
     return locator
 
-def loadData(locator, dataType, data):
-    strType = str(dataType)
-    locator.addAttr(strType, type='string')
-    locator.setAttr(strType, str(data), l=True)    
+def update(locatorList):
+    for locator in locatorList:
+        for referenceAttribute, attribute in zip(constants.placeholderAttributes[1:], ['t','r','s']):
+            for axis in constants.axis:
+                value = locator.getAttr("{}{}".format(attribute, axis))
+                locator.setAttr("{}{}".format(referenceAttribute, axis.upper()), value)
+    
 
-def snap(target, position):
+def snap(target, values, attributeList):
     loc = make(target)
-    for value, axis in zip(position, 'XYZ'):
-        loadData(loc, "{}T{}".format(target, axis), value)
+    if type(values) != 'list':
+        values = list(values)
 
-    navigate.inputAttributes(loc, position, ['t'], ['x', 'y', 'z'])
+    navigate.inputAttributes(loc, values, attributeList, constants.axis)
+    update([loc])
 
     return loc
+
+def reset(locatorList):
+    for locator in locatorList:
+        valueList = []
+        for referenceAttribute in constants.placeholderAllAttributes[1:]:
+            valueList.append(locator.getAttr(referenceAttribute))
+
+        navigate.inputAttributes(locator, valueList, ['t','r','s'], constants.axis)
 
 

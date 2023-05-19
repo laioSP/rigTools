@@ -63,11 +63,11 @@ def ofAll(selected):
         z.append(position[2])
 
     position = [average(x) , average(y) , average(z)]
-    placeholder.snap("{}_{}".format(selected[0], selected[-1]), position)
+    placeholder.snap("{}_{}".format(selected[0], selected[-1]), position, ['t'])
 
 def ofEach(selected):
     for i in selected:
-        placeholder.snap(i, getPosition(i))
+        placeholder.snap(i, getPosition(i), ['t'])
 
 
 def ofStep(selected, step):
@@ -95,21 +95,22 @@ def subDivide(selection, amount):
         for s,i in zip(startPosition, incrementPostion):
             newPosition.append(s-i*a)
 
-        placeholder.snap("{}to{}_{}".format(selection[0], selection[-1], a), newPosition)
+        placeholder.snap("{}to{}_{}".format(selection[0], selection[-1], a), newPosition, ['t'])
 
 
 def matchAttributes(source, target, attributeList, axisList, reference):    
-    for axis in axisList:
-        for attribute in attributeList:
-            for s, t in zip(source, target):
+    for s, t in zip(source, target):
 
-                if reference == 'world':
-                    value = getPosition(t)
+        if reference == 'world':
+            value = getPosition(t)
+            s.setAttr('t', value)
 
-                if reference == 'object':
-                    value = t.getAttr("{}{}".format(attribute, axis))
+        if reference == 'object':
 
-                s.setAttr("{}{}".format(attribute, axis), value)
+            for axis in axisList:
+                for attribute in attributeList:
+                    value = t.getAttr("{}{}".format(attribute, axis))                
+                    s.setAttr("{}{}".format(attribute, axis), value)
 
 def explode(target, minimum, maximum, attributeList, axisList, keyCheck, firstKey, lastKey):
     
@@ -125,9 +126,10 @@ def explode(target, minimum, maximum, attributeList, axisList, keyCheck, firstKe
 
 
 
-def inputAttributes(obj, targetValue, attributeList, axisList):    
-    for axis in axisList:
-        for attribute in attributeList:
+def inputAttributes(obj, targetValue, attributeList, axisList):  
+    for attribute in attributeList: 
+        for axis in axisList:
+
             obj.setAttr("{}{}".format(attribute, axis), targetValue[0])
             del targetValue[0]
 

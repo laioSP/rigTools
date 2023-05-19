@@ -1,6 +1,9 @@
 from PySide2.QtWidgets import QApplication, QLabel, QMainWindow, QSizePolicy, QWidget, QGridLayout, QPushButton,QCheckBox, QSpinBox, QRadioButton, QDoubleSpinBox
 import navigate
+import blueprint
+import placeholder
 import pymel.core as pm
+import constants
     
 class MainWindow(QMainWindow):
 
@@ -18,20 +21,20 @@ class MainWindow(QMainWindow):
         
         self.stepValue = self.numberBox(3)
 
-        self.centerOfSelection = self.button("center of selection")
+        self.centerOfSelection = self.button("center of \n selection")
         self.centerOfSelection.clicked.connect(lambda: navigate.ofAll(pm.ls(os=True, fl=True)))
         
         self.tie = self.button("tie")
         self.tie.clicked.connect(lambda: navigate.ConstraintRope().tie(pm.ls(os=True, fl=True)))
 
-        self.centerOfEach = self.button("center of each")
+        self.centerOfEach = self.button("center of \n each")
         self.centerOfEach.clicked.connect(lambda: navigate.ofEach(pm.ls(os=True, fl=True)))
         
-        self.centerOfStep= self.button("center of step")
+        self.centerOfStep= self.button("center of \n step")
         self.centerOfStep.clicked.connect(lambda: navigate.ofStep(pm.ls(os=True, fl=True), self.stepValue.value()))
         
         self.subdivide= self.button("subdivide")        
-        self.subdivide.clicked.connect(lambda : navigate.subDivide(pm.ls(os=True, fl=True), self.stepValue.value()))
+        self.subdivide.clicked.connect(lambda : navigate.subDivide(pm.ls(os=True, fl=True), int(self.stepValue.value()) ))
 
         self.minLabel = QLabel('min values')
         self.maxLabel = QLabel('max values')
@@ -41,7 +44,7 @@ class MainWindow(QMainWindow):
 
         self.startKeyLabel = QLabel('start keyframe')
         self.endKeyLabel = QLabel('end keyframe')
-        self.startKeyExplode = self.numberBox(0)
+        self.startKeyExplode = self.numberBox(1)
         self.endKeyExplode = self.numberBox(120)
         self.animateExplode = self.checkBox("animate explosion", False)
 
@@ -50,7 +53,7 @@ class MainWindow(QMainWindow):
                                                                      self.attributeList(), self.axisList(), self.animateExplode.isChecked(), 
                                                                      self.startKeyExplode.value(), self.endKeyExplode.value()))
         
-        self.loadSelectionButton = self.button("load selection")
+        self.loadSelectionButton = self.button("load \n selection")
         self.loadSelectionButton.setCheckable(True)
         self.loadSelectionButton.setChecked(False)
         self.loadSelectionButton.clicked.connect(lambda checked: self.unloadSelection() if not checked else self.loadSelection())
@@ -72,21 +75,41 @@ class MainWindow(QMainWindow):
         self.match.clicked.connect(lambda: navigate.matchAttributes(pm.ls(os=True, fl=True), self.loadedSelection, self.attributeList(), 
                                                                     self.axisList(), self.spacePostion()))        
 
-        self.importPlaceholders = self.button("import placeholders")
-        self.clean = self.button("clean up")
-        self.clean.clicked.connect(lambda : navigate.deleteGroup())
+        self.importPlaceholders = self.button("import \n placeholders")
+        self.importPlaceholders.clicked.connect(lambda : blueprint.importBlueprint())
 
-        self.builtLayouts['spacePositionLayout'].addWidget(self.importPlaceholders, 0, 0, 1, 2)
-        self.builtLayouts['spacePositionLayout'].addWidget(self.worldRadio, 1, 0)
-        self.builtLayouts['spacePositionLayout'].addWidget(self.objectRadio, 1, 1)
+        self.exportPlaceholders = self.button("export \n placeholders")
+        self.exportPlaceholders.clicked.connect(lambda : blueprint.exportBlueprint())
+
+        self.updateAllPlaceholders = self.button("update all \n placeholders")
+        self.updateAllPlaceholders.clicked.connect(lambda : placeholder.update(pm.ls(constants.placeholderGroup)[0].listRelatives(s=False)))
+
+        self.updateSelectedPlaceholders = self.button("update \n selected \n placeholders")
+        self.updateSelectedPlaceholders.clicked.connect(lambda : placeholder.update(pm.ls(os=True, fl=True)))
+
+        self.resetSelectedPlaceholders = self.button("reset \n selected \n placeholders")
+        self.resetSelectedPlaceholders.clicked.connect(lambda : placeholder.reset(pm.ls(os=True, fl=True)))
+
+        self.resetAllPlaceholders = self.button("reset \n all \n placeholders")
+        self.resetAllPlaceholders.clicked.connect(lambda : placeholder.reset(pm.ls(constants.placeholderGroup)[0].listRelatives(s=False)))
+
+        self.clean = self.button("clean up")
+        self.clean.clicked.connect(lambda : placeholder.deleteGroup())
+
+        self.builtLayouts['spacePositionLayout'].addWidget(self.importPlaceholders, 0, 0, 1, 3)
+        self.builtLayouts['spacePositionLayout'].addWidget(self.updateAllPlaceholders, 1, 0)
+        self.builtLayouts['spacePositionLayout'].addWidget(self.updateSelectedPlaceholders, 1, 1)
+        self.builtLayouts['spacePositionLayout'].addWidget(self.resetAllPlaceholders, 2, 0)
+        self.builtLayouts['spacePositionLayout'].addWidget(self.resetSelectedPlaceholders, 2, 1)
+        self.builtLayouts['spacePositionLayout'].addWidget(self.exportPlaceholders, 3, 0, 1, 3)
+        self.builtLayouts['spacePositionLayout'].addWidget(self.worldRadio, 4, 0)
+        self.builtLayouts['spacePositionLayout'].addWidget(self.objectRadio, 4, 1)
 
         self.builtLayouts['stepLayout'].addWidget(self.stepValue, 1, 0)
         self.builtLayouts['stepLayout'].addWidget(self.centerOfStep, 2, 0)  
         self.builtLayouts['stepLayout'].addWidget(self.subdivide, 1, 1, 2, 1)
-        self.builtLayouts['stepLayout'].addWidget(self.tie, 1, 2, 2, 2)
+        self.builtLayouts['stepLayout'].addWidget(self.tie, 1, 2, 2, 1)
         
-      
-
         self.builtLayouts['placeholderLayout'].addWidget(self.centerOfSelection, 2, 0)
         self.builtLayouts['placeholderLayout'].addWidget(self.centerOfEach, 3, 0)
 
@@ -184,10 +207,7 @@ class MainWindow(QMainWindow):
         box.setValue(defaultValue)
 
         return box
-
-
-
-       
+      
     def chainLayout(self, layoutDictionary, parent):
         counter=0
 
