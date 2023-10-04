@@ -31,7 +31,7 @@ class MainWindow(QMainWindow):
         self.centerOfEach.clicked.connect(lambda: navigate.ofEach(pm.ls(os=True, fl=True)))
         
         self.centerOfStep= self.button("center of \n step")
-        self.centerOfStep.clicked.connect(lambda: navigate.ofStep(pm.ls(os=True, fl=True), self.stepValue.value()))
+        self.centerOfStep.clicked.connect(lambda: navigate.ofStep(pm.ls(os=True, fl=True), int(self.stepValue.value())))
         
         self.subdivide= self.button("subdivide")        
         self.subdivide.clicked.connect(lambda : navigate.subDivide(pm.ls(os=True, fl=True), int(self.stepValue.value()) ))
@@ -40,7 +40,6 @@ class MainWindow(QMainWindow):
         self.maxLabel = QLabel('max values')
         self.maxExplode = self.numberBox(25)
         self.minExplode = self.numberBox(-25)
-
 
         self.startKeyLabel = QLabel('start keyframe')
         self.endKeyLabel = QLabel('end keyframe')
@@ -117,7 +116,6 @@ class MainWindow(QMainWindow):
         self.builtLayouts['axisLayout'].addWidget(self.checkBoxY,0,1)
         self.builtLayouts['axisLayout'].addWidget(self.checkBoxZ,0,2)
 
-        
         self.builtLayouts['attributesLayout'].addWidget(self.loadSelectionButton,0,0, 4,1)
         self.builtLayouts['attributesLayout'].addWidget(self.checkBoxTranslate,0,1)
         self.builtLayouts['attributesLayout'].addWidget(self.checkBoxRotate,1,1)

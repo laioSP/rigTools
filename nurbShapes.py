@@ -77,6 +77,16 @@ def nurbArrow(name, size):
 def nurbCircle(name, radius):
     ring = pm.circle(n=name, r=radius)[0]
     return ring
+def rotateCv(selection, axis):
+    value = 15
+    offset = {'x': [value, 0, 0], 'y': [0, value, 0], 'z': [0, 0, value]}
+    for i in selection:
+        pm.rotate('{}.cv[*]'.format(i), offset[axis])
+
+def scaleCv(selection, upDown):
+    value = {'+': 1.2, '-': 0.8}
+    for i in selection:
+        pm.scale('{}.cv[*]'.format(i), value[upDown], value[upDown], value[upDown])
 
 
 shapes = { 'cube': nurbCube, 'square':nurbSquare, 'sphere':nurbSphere, 'arrow':nurbArrow , 'circle': nurbCircle}

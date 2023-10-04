@@ -13,7 +13,7 @@ class ik:
         self.shape = shape
         self.positions={'translation' : [], 'rotation' : []}        
         self.rig = {}
-        
+                
     def placement(self):
         self.rig = nurbRig.stiffRopeRig(self.side, '{}_placement'.format(self.name), 3, 0, self.shape)
         self.rig['aim'] = fk(self.side, self.name, self.shape).placement(translation = (-5,3,0))
@@ -46,6 +46,7 @@ class fk:
         
     def placement(self, translation = (0,0,0), rotation = (0,0,0)):
         self.rig = controls.makeFk(self.side, '{}_placement'.format(self.name), self.shape, 3, 1, translation, rotation)
+        print(self.rig)
         return self.rig 
 
     def inquiry(self):
@@ -57,6 +58,7 @@ class fk:
         pm.delete(self.rig['group'])
         self.rig.clear()
         self.rig = controls.makeFk(self.side, self.name, self.shape, 3, 1, translation = self.positions['translation'], rotation = self.positions['rotation'])
+        print(self.rig)
 
         return self.rig
 

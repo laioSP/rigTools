@@ -7,7 +7,6 @@ import placeholder
 import constants
 
 
-
 def makeDictionary(locatorList):
     placeHolders = {}
 
@@ -21,6 +20,8 @@ def makeDictionary(locatorList):
 
     return placeHolders
 
+def getProjectFolder(): 
+    return pm.workspace(query=True, rootDirectory=True)
 
 
 def getDocumentPath(fileName):
