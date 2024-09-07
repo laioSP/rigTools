@@ -89,6 +89,6 @@ def scaleCv(selection, upDown):
         pm.scale('{}.cv[*]'.format(i), value[upDown], value[upDown], value[upDown])
 
 
-shapes = { 'cube': nurbCube, 'square':nurbSquare, 'sphere':nurbSphere, 'arrow':nurbArrow , 'circle': nurbCircle}
+shapes = { 'cube': nurbCube, 'square':nurbSquare, 'sphere':nurbSphere, 'arrow':nurbArrow , 'circle': nurbCircle, 'pin':nurbPin}
 
 

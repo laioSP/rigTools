@@ -2,18 +2,25 @@ import pymel.core as pm
 
 
 def make(heightCtrl, targetList, heightZero=0, offset=1.25):
-    height = pm.getAttr('{}.ty'.format(heightCtrl))
+    height = pm.xform(heightCtrl, q=True, t=True, ws=True)[1]
     divide = pm.createNode('multiplyDivide', n='{}_divide_{}'.format(heightCtrl, height))
     divide.setAttr('input1X', height)
     divide.setAttr('input2Y', height)
     divide.setAttr('input1Z', height)
     divide.setAttr('operation', 2)
-    pm.connectAttr('{}.ty'.format(heightCtrl), '{}.input1Y'.format(divide))
     pm.connectAttr('{}.ty'.format(heightCtrl), '{}.input2X'.format(divide))
     pm.connectAttr('{}.ty'.format(heightCtrl), '{}.input2Z'.format(divide))
 
-    if heightZero != 0:
-        pm.connectAttr('{}.ty'.format(heightZero), '{}.input2X'.format(divide))
+    difference = pm.createNode('plusMinusAverage', n='{}_minus_{}'.format(heightCtrl, heightZero))
+    difference.setAttr("operation", 2)
+    pm.connectAttr('{}.ty'.format(heightCtrl), '{}.input1D[0]'.format(difference))
+    difference.connectAttr('output1D', '{}.input1Y'.format(divide))
+
+    if type(heightZero) == 'float' or type(heightZero) == 'int':
+        difference.setAttr('input1D[1]', heightZero)
+
+    elif type(heightZero) == 'str':
+        pm.connectAttr('{}.ty'.format(heightZero), '{}.input1D[1]'.format(difference))
 
     for target in targetList:
         offsetAttribute = '{}Offset'.format(target)

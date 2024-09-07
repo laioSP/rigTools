@@ -91,11 +91,11 @@ def makeFk(side, name, shape, size, amountOfSubCtrls, translation = (0,0,0), rot
     jnt[0].setAttr('r', rotation)
 
     ctrl = makeControls(side, name, shape, size, amountOfSubCtrls, jnt)
-    jntGroup = ctrlGroup.flatHierarchy(name ,'FKJNT', side, jnt)
+    #jntGroup = ctrlGroup.flatHierarchy(name ,'FKJNT', side, jnt)
     
-    grp = ctrlGroup.flatHierarchy(name, 'FK', side, [ctrl, jntGroup])
+    #grp = ctrlGroup.flatHierarchy(name, 'FK', side, [ctrl, jntGroup])
     
-    fkDictionary = {'ctrl' : ctrl, 'driverJoints' : jnt, 'group' : grp}
+    fkDictionary = {'ctrl' : ctrl, 'driverJoints' : jnt}
     
     pm.select(cl=True)
     ctrlGroup.clearflatGroups()    

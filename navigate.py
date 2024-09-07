@@ -3,15 +3,19 @@ import placeholder
 import maya.cmds as cmds
 from random import uniform
 
+
+# Retrieve the positions of the vertices and unpack the first vertex into x, y, z coordinates
 def unpackAxis(obj):
     verticesList = getVertexPosition(obj)
     x, y, z = verticesList[0]
 
     return x, y, z
 
+# Calculate the average of a list of numbers
 def average(list):
     return sum(list) / (float(len(list)))
 
+    # Compute the average position of a list of vertices in the x, y, and z axes
 def averageAxis(verticesList):
     limit = len(verticesList)
     x = []
@@ -25,6 +29,7 @@ def averageAxis(verticesList):
 
     return [average(x), average(y), average(z)]
 
+# Determine the type of mesh component (vertex, edge, or face) and apply the corresponding function
 def meshPiece(obj):
     check = obj.split('.')[-1].split('[')[0]
     checkedMesh = {
@@ -34,16 +39,19 @@ def meshPiece(obj):
     }
     return checkedMesh[check][0](checkedMesh[check][1])
 
+# Get the world position of an object, depending on whether it is a transform, mesh, or joint
 def getPosition(obj):
     meshOrTransform = {'transform': pm.objectCenter, 'mesh': meshPiece, 'joint': pm.objectCenter}
     return meshOrTransform[pm.objectType(obj)](obj)
 
+# Get the positions of a list of objects
 def getListPosition(list):
     position = []
     for i in list:
         position.append(getPosition(i))
     return position
 
+# Get the world positions of all vertices of a given mesh object
 def getVertexPosition(obj):
     allVertexPositions = []
     vertexList = pm.ls(pm.polyListComponentConversion(obj, tv=True), fl=True)
@@ -52,6 +60,7 @@ def getVertexPosition(obj):
 
     return allVertexPositions
 
+# Snap a placeholder object to the average position of a group of selected objects
 def ofAll(selected):
     x = [];
     y = [];
@@ -69,11 +78,12 @@ def ofEach(selected):
     for i in selected:
         placeholder.snap(i, getPosition(i), ['t'])
 
-
+# Snap a placeholder object to each selected object
 def ofStep(selected, step):
     for i in range(0,len(selected),step):
         ofAll(selected[i:i+step])
 
+# Subdivide the space between two objects into a specified number of increments and snap placeholders
 def subDivide(selection, amount):
     firstPosition = getPosition(selection[0])
     lastPosition = getPosition(selection[-1])
@@ -97,7 +107,7 @@ def subDivide(selection, amount):
 
         placeholder.snap("{}to{}_{}".format(selection[0], selection[-1], a), newPosition, ['t'])
 
-
+# Match the attributes (e.g., translation, rotation) from source objects to target objects
 def matchAttributes(source, target, attributeList, axisList, reference):    
     for s, t in zip(source, target):
 
@@ -112,6 +122,7 @@ def matchAttributes(source, target, attributeList, axisList, reference):
                     value = t.getAttr("{}{}".format(attribute, axis))                
                     s.setAttr("{}{}".format(attribute, axis), value)
 
+# Randomly move target objects within a specified range (explosion effect)
 def explode(target, minimum, maximum, attributeList, axisList, keyCheck, firstKey, lastKey):
     
     for axis in axisList:
@@ -125,7 +136,7 @@ def explode(target, minimum, maximum, attributeList, axisList, keyCheck, firstKe
                     t.setAttr("{}{}".format(attribute, axis), uniform(minimum, maximum))
 
 
-
+# Input specific attribute values for an object across specified axes
 def inputAttributes(obj, targetValue, attributeList, axisList):  
     for attribute in attributeList: 
         for axis in axisList:
